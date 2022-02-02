@@ -1,0 +1,1 @@
+{"version":3,"sources":["container.ts"],"names":["baseStyle","maxWidth"],"mappings":"AAAA,MAAMA,SAAS,GAAG;AAChBC,EAAAA,QAAQ,EAAE;AADM,CAAlB;AAIA,eAAe;AACbD,EAAAA;AADa,CAAf","sourcesContent":["const baseStyle = {\n  maxWidth: '80%',\n};\n\nexport default {\n  baseStyle,\n};\n"]}

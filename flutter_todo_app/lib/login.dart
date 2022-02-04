@@ -83,26 +83,31 @@ class _LoginPageState extends State<LoginPage> {
       });
     });
     String jsonResponse = jsonEncode(currentNode);
-    String result = await platform.invokeMethod('next', jsonResponse);
-    Navigator.pop(context);
-    Map<String, dynamic> response = jsonDecode(result);
-    if (response["type"] == "LoginSuccess") {
-      _navigateToNextScreen(context);
-    } else  {
-      Map<String, dynamic> frNodeMap = jsonDecode(result);
-      var frNode = FRNode.fromJson(frNodeMap);
-      currentNode = frNode;
-      _handleNode(frNode);
+    try {
+      String result = await platform.invokeMethod('next', jsonResponse);
+      Navigator.pop(context);
+      Map<String, dynamic> response = jsonDecode(result);
+      if (response["type"] == "LoginSuccess") {
+        _navigateToNextScreen(context);
+      } else  {
+        Map<String, dynamic> frNodeMap = jsonDecode(result);
+        var frNode = FRNode.fromJson(frNodeMap);
+        currentNode = frNode;
+        _handleNode(frNode);
+      }
+      debugPrint('SDK: $result');
+    } catch (e) {
+      debugPrint('SDK Error: $e');
     }
-    debugPrint('SDK: $result');
   }
 
   Widget _listView() {
     return ListView.builder(
+      shrinkWrap: true,
       itemCount: _fields.length,
       itemBuilder: (context, index) {
         return Container(
-          margin: EdgeInsets.all(15),
+          margin: EdgeInsets.all(15.0),
           child: _fields[index],
         );
       },
@@ -110,12 +115,23 @@ class _LoginPageState extends State<LoginPage> {
   }
 
   Widget _okButton() {
-    return ElevatedButton(
-      onPressed: () async {
-        showAlertDialog(context);
-        _next();
-      },
-      child: Text("Sign In"),
+    return Container(
+      color: Colors.transparent,
+      width: MediaQuery.of(context).size.width,
+      margin: EdgeInsets.all(15.0),
+      height: 60,
+      child: TextButton(
+        style: ButtonStyle(backgroundColor: MaterialStateProperty.all(Colors.blue)),
+        onPressed: () async {
+          showAlertDialog(context);
+          _next();
+        },
+        child:
+        Text(
+          "Sign in",
+          style: TextStyle(color: Colors.white),
+        ),
+      ),
     );
   }
 
@@ -139,11 +155,13 @@ class _LoginPageState extends State<LoginPage> {
   Widget build(BuildContext context) {
     return Scaffold(
         appBar: AppBar(
-          title: Text("Flutter To-Do list application"),
+          title: Text("Sign-In", style: TextStyle(color: Colors.grey[800]),),
+          backgroundColor: Colors.grey[200],
         ),
+        backgroundColor: Colors.grey[100],
         body: Column(
           children: [
-            Expanded(child: _listView()),
+            _listView(),
             _okButton(),
           ],
         ));

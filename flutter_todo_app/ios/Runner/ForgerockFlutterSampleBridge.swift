@@ -40,6 +40,27 @@ public class ForgerockFlutterSampleBridge {
         result("User logged out")
     }
     
+    @objc func getUserInfo(result: @escaping FlutterResult) {
+        FRUser.currentUser?.getUserInfo(completion: { userInfo, error in
+            if (error != nil) {
+                result(FlutterError(code: "Error",
+                                        message: error?.localizedDescription,
+                                    details: nil))
+            } else {
+                let encoder = JSONEncoder()
+                encoder.outputFormatting = .prettyPrinted
+                if let userInfo = userInfo?.userInfo, let userInfoJson = try? userInfo.toJson() {
+                    result(userInfoJson)
+                } else {
+                    result(FlutterError(code: "Error",
+                                            message: "User info encoding failed",
+                                        details: nil))
+                }
+                
+            }
+        })
+    }
+    
     @objc func next(_ response: String, completion: @escaping FlutterResult) {
         let decoder = JSONDecoder()
         let jsonData = Data(response.utf8)
@@ -197,7 +218,7 @@ public struct FRNode: Encodable {
     }
   }
   
-  //used for passing the Node object back to the ReactNative layer
+  //used for passing the Node object back to the Flutter layer
   func resolve() throws -> String  {
     var response = [String: Any]()
     response["authId"] = self.authId
@@ -427,6 +448,8 @@ extension ForgerockFlutterSampleBridge {
                 } else {
                     result(FlutterError(code: "500", message: "Arguments not parsed correctly", details: nil))
                 }
+            case "getUserInfo":
+                self.getUserInfo(result: result)
             default:
                 result(FlutterMethodNotImplemented)
             }

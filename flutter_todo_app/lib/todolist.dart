@@ -1,6 +1,8 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
+import 'package:flutter/scheduler.dart';
 import 'package:flutter/services.dart';
-import 'login.dart';
 import 'main.dart';
 
 class TodoList extends StatefulWidget {
@@ -43,7 +45,36 @@ class TodoItem extends StatelessWidget {
 class _TodoListState extends State<TodoList> {
   final TextEditingController _textFieldController = TextEditingController();
   final List<Todo> _todos = <Todo>[];
+  final List<Widget> _widgets = <Widget>[];
   static const platform = MethodChannel('forgerock.com/SampleBridge');
+  String header = "";
+  String subtitle = "";
+  @override
+  void initState() {
+    super.initState();
+
+    SchedulerBinding.instance?.addPostFrameCallback((_) => {
+      _getUserInfo()
+    });
+
+  }
+
+  Future<void> _getUserInfo() async {
+    showAlertDialog(context);
+    String response;
+    try {
+      final String result = await platform.invokeMethod('getUserInfo');
+      Map<String, dynamic> userInfoMap = jsonDecode(result);
+      response = result;
+      header = userInfoMap["name"];
+      subtitle = userInfoMap["email"];
+      Navigator.pop(context);
+      setState(() {});
+    } on PlatformException catch (e) {
+      response = "SDK Start Failed: '${e.message}'.";
+    }
+    debugPrint('SDK: $response');
+  }
 
   Future<void> _logout() async {
     final String result = await platform.invokeMethod('logout');
@@ -51,7 +82,10 @@ class _TodoListState extends State<TodoList> {
   }
 
   void _navigateToNextScreen(BuildContext context) {
-    Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => TodoApp()),);
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(builder: (context) => TodoApp()),
+    );
   }
 
   void _onItemTapped(int index) {
@@ -60,35 +94,37 @@ class _TodoListState extends State<TodoList> {
     }
   }
 
+  void showAlertDialog(BuildContext context) {
+    AlertDialog alert=AlertDialog(
+      content: new Row(
+        children: [
+          CircularProgressIndicator(),
+          Container(margin: EdgeInsets.only(left: 5),child:Text("Loading" )),
+        ],),
+    );
+    showDialog(barrierDismissible: false,
+      context:context,
+      builder:(BuildContext context){
+        return alert;
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
-    return  Scaffold(
-      appBar:  AppBar(
-        title:  Text('Todo list'),
+    return Scaffold(
+      appBar: AppBar(
+        title: Text(
+          'Todo list',
+          style: TextStyle(color: Colors.grey[800]),
+        ),
+        backgroundColor: Colors.grey[200],
       ),
-      bottomNavigationBar: BottomNavigationBar(
-        items: const <BottomNavigationBarItem>[
-          BottomNavigationBarItem(
-            icon: Icon(Icons.done_all),
-            label: 'To-Dos',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.logout),
-            label: 'Log out',
-          ),
-        ],
-        currentIndex: 0,
-        selectedItemColor: Colors.blueAccent[800],
-        onTap: _onItemTapped,
-      ),
-      body: ListView(
-        padding: EdgeInsets.symmetric(vertical: 8.0),
-        children: _todos.map((Todo todo) {
-          return TodoItem(
-            todo: todo,
-            onTodoChanged: _handleTodoChange,
-          );
-        }).toList(),
+      bottomNavigationBar: _bottomBar(),
+      backgroundColor: Colors.grey[100],
+      body: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [_welcomeText(), _listView()],
       ),
       floatingActionButton: FloatingActionButton(
           onPressed: () => _displayDialog(),
@@ -96,6 +132,7 @@ class _TodoListState extends State<TodoList> {
           child: Icon(Icons.add)),
     );
   }
+
   Future<void> _logoutDialog() async {
     return showDialog<void>(
       context: context,
@@ -122,6 +159,96 @@ class _TodoListState extends State<TodoList> {
       },
     );
   }
+
+  Widget _welcomeText() {
+    return Container(
+      color: Colors.greenAccent[100],
+      width: MediaQuery.of(context).size.width,
+      margin: EdgeInsets.all(15.0),
+      child:
+      Padding(
+        padding: const EdgeInsets.all(15.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(Icons.gpp_good),
+                SizedBox(width: 2),
+                Expanded(
+                  flex: 4,
+                  child: Text(
+                    "Welcome back, $header",
+                    style: TextStyle(
+                        color: Colors.grey[900],
+                        fontWeight: FontWeight.bold,
+                        fontSize: 16),
+                    softWrap: true,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                )
+              ],
+            ),
+            SizedBox(height: 5),
+            Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                SizedBox(width: 28),
+                Expanded(
+                  flex: 4,
+                    child: Text(
+                      "You're currently logged in with the email $subtitle",
+                      style: TextStyle(
+                          color: Colors.grey[900],
+                          fontWeight: FontWeight.w200,
+                          fontSize: 14),
+                      softWrap: true,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    )
+                )
+              ],
+            ),
+          ],
+        ),
+      )
+    );
+  }
+
+  Widget _listView() {
+    return ListView(
+      shrinkWrap: true,
+      padding: EdgeInsets.symmetric(vertical: 8.0),
+      children: _todos.map((Todo todo) {
+        return TodoItem(
+          todo: todo,
+          onTodoChanged: _handleTodoChange,
+        );
+      }).toList(),
+    );
+  }
+
+  Widget _bottomBar() {
+    return BottomNavigationBar(
+      backgroundColor: Colors.grey[200],
+      items: const <BottomNavigationBarItem>[
+        BottomNavigationBarItem(
+          icon: Icon(Icons.done_all),
+          label: 'To-Dos',
+        ),
+        BottomNavigationBarItem(
+          icon: Icon(Icons.logout),
+          label: 'Log out',
+        ),
+      ],
+      currentIndex: 0,
+      selectedItemColor: Colors.blueAccent[800],
+      onTap: _onItemTapped,
+    );
+  }
+
 // Other functions
   Future<void> _displayDialog() async {
     return showDialog<void>(
@@ -135,6 +262,12 @@ class _TodoListState extends State<TodoList> {
             decoration: const InputDecoration(hintText: 'Type your new todo'),
           ),
           actions: <Widget>[
+            TextButton(
+              child: const Text('Cancel'),
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+            ),
             TextButton(
               child: const Text('Add'),
               onPressed: () {

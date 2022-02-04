@@ -52,6 +52,7 @@ class _TodoAppState extends State<TodoApp> {
           currentIndex: _selectedIndex,
           selectedItemColor: Colors.blueAccent[800],
           onTap: _onItemTapped,
+          backgroundColor: Colors.grey[200],
         )
       ),
     );

@@ -3,11 +3,7 @@ import 'package:flutter_todo_app/home.dart';
 import 'package:flutter_todo_app/login.dart';
 import 'package:flutter_todo_app/todolist.dart';
 
-class Todo {
-  Todo({required this.name, required this.checked});
-  final String name;
-  bool checked;
-}
+
 
 void main() => runApp(
   new TodoApp(),

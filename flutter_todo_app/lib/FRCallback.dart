@@ -1,3 +1,15 @@
+//  FRCallback.dart
+//
+//  Copyright (c) 2022 ForgeRock. All rights reserved.
+//
+//  This software may be modified and distributed under the terms
+//  of the MIT license. See the LICENSE file for details.
+
+/*
+The FRCallback class is native Dart class replicating the structure of the SDKs Callback objects.
+This is used in order to natively parse and encode/decode the JSON objects returned from the SDKs.
+*/
+
 class FRCallback {
   final String type;
   final int id;
@@ -34,11 +46,11 @@ class FRCallback {
 
 class FRInputOutput {
   final String name;
-  String value;
+  dynamic value;
 
   FRInputOutput(this.name, this.value);
 
-  FRInputOutput.fromJson(Map<String, dynamic> json)
+  FRInputOutput.fromJson(Map<dynamic, dynamic> json)
       : name = json['name'],
         value = json['value'];
 

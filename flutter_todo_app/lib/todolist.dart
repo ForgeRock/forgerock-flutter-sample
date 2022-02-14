@@ -5,6 +5,12 @@ import 'package:flutter/scheduler.dart';
 import 'package:flutter/services.dart';
 import 'main.dart';
 
+class Todo {
+  Todo({required this.name, required this.checked});
+  final String name;
+  bool checked;
+}
+
 class TodoList extends StatefulWidget {
   @override
   _TodoListState createState() => new _TodoListState();
@@ -49,16 +55,18 @@ class _TodoListState extends State<TodoList> {
   static const platform = MethodChannel('forgerock.com/SampleBridge');
   String header = "";
   String subtitle = "";
+
+  //Lifecycle methods
   @override
   void initState() {
     super.initState();
-
     SchedulerBinding.instance?.addPostFrameCallback((_) => {
+      //Calling the userinfo endpoint is going to give use some user profile information to enrich our UI. Additionally, verifies that we have a valid access token.
       _getUserInfo()
     });
-
   }
 
+  // SDK Calls -  Note the promise type responses. Handle errors on the UI layer as required
   Future<void> _getUserInfo() async {
     showAlertDialog(context);
     String response;
@@ -72,6 +80,7 @@ class _TodoListState extends State<TodoList> {
       setState(() {});
     } on PlatformException catch (e) {
       response = "SDK Start Failed: '${e.message}'.";
+      Navigator.pop(context);
     }
     debugPrint('SDK: $response');
   }
@@ -81,11 +90,13 @@ class _TodoListState extends State<TodoList> {
     _navigateToNextScreen(context);
   }
 
+  //Helper funtions
+  void _goHome() {
+    Navigator.pop(context);
+  }
+
   void _navigateToNextScreen(BuildContext context) {
-    Navigator.pushReplacement(
-      context,
-      MaterialPageRoute(builder: (context) => TodoApp()),
-    );
+    _goHome();
   }
 
   void _onItemTapped(int index) {
@@ -110,10 +121,13 @@ class _TodoListState extends State<TodoList> {
     );
   }
 
+  //Widgets
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        automaticallyImplyLeading: false,
         title: Text(
           'Todo list',
           style: TextStyle(color: Colors.grey[800]),

@@ -29,8 +29,14 @@ public class ForgerockFlutterSampleBridge {
       }
     }
     
-    @objc func loginWithoutUI(result: @escaping FlutterResult) {
+    @objc func login(result: @escaping FlutterResult) {
         FRUser.login { (user, node, error) in
+            self.handleNode(user, node, error, completion: result)
+        }
+    }
+    
+    @objc func register(result: @escaping FlutterResult) {
+        FRUser.register { (user, node, error) in
             self.handleNode(user, node, error, completion: result)
         }
     }
@@ -439,7 +445,9 @@ extension ForgerockFlutterSampleBridge {
             case "frAuthStart":
                 self.frAuthStart(result: result)
             case "login":
-                self.loginWithoutUI(result: result)
+                self.login(result: result)
+            case "register":
+                self.register(result: result)
             case "logout":
                 self.frLogout(result: result)
             case "next":

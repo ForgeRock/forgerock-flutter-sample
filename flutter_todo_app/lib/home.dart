@@ -7,6 +7,7 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
+  //Widgets
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -29,7 +30,7 @@ class _HomePageState extends State<HomePage> {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               SizedBox(height: 15),
-              Text("Protect with ForgeRock; Develop with React Native",
+              Text("Protect with ForgeRock; Develop with Flutter",
               style: TextStyle(
                   color: Colors.grey[800],
                   fontWeight: FontWeight.w100,

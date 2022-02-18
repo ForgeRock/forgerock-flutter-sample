@@ -7,10 +7,12 @@
 
 import Foundation
 import FRAuth
+import FRCore
 import Flutter
 
 public class ForgerockFlutterSampleBridge {
     var currentNode: Node?
+    private let session = URLSession(configuration: .default)
     
     @objc func frAuthStart(result: @escaping FlutterResult) {
       // Set log level according to your needs
@@ -167,6 +169,42 @@ public class ForgerockFlutterSampleBridge {
             completion(FlutterError(code: "Error",
                                 message: "UnkownError",
                                 details: nil))
+        }
+    }
+    
+    @objc func callEndpoint(_ endpoint: String, method: String, payload: String, completion: @escaping FlutterResult) {
+        // Invoke API
+        
+        FRUser.currentUser?.getAccessToken { (user, error) in
+            
+            //  AM 6.5.2 - 7.0.0
+            //
+            //  Endpoint: /oauth2/realms/userinfo
+            //  API Version: resource=2.1,protocol=1.0
+            
+            var header: [String: String] = [:]
+            
+            if error == nil, let user = user {
+                header["Authorization"] = user.buildAuthHeader()
+            }
+            
+            let request = Request(url: endpoint, method: Request.HTTPMethod(rawValue: method) ?? .GET, headers: header, bodyParams: payload.convertToDictionary() ?? [:], urlParams: [:], requestType: .json, responseType: .json)
+            self.session.dataTask(with: request.build()!) { (data, response, error) in
+                guard let responseData = data, let httpResponse = response as? HTTPURLResponse, error == nil else {
+                    completion(FlutterError(code: "API Error",
+                                            message: error!.localizedDescription,
+                                            details: nil))
+                    return
+                }
+
+                if (200 ..< 303) ~= httpResponse.statusCode {
+                    completion(String(data: responseData, encoding: .utf8))
+                } else {
+                    completion(FlutterError(code: "Error: statusCode",
+                                            message: httpResponse.statusCode.description,
+                                            details: nil))
+                }
+            }.resume()
         }
     }
     
@@ -456,11 +494,30 @@ extension ForgerockFlutterSampleBridge {
                 } else {
                     result(FlutterError(code: "500", message: "Arguments not parsed correctly", details: nil))
                 }
+            case "callEndpoint":
+                if let arguments = call.arguments as? [String] {
+                    self.callEndpoint(arguments[0], method: arguments[1], payload: arguments[2], completion: result)
+                } else {
+                    result(FlutterError(code: "500", message: "Arguments not parsed correctly", details: nil))
+                }
             case "getUserInfo":
                 self.getUserInfo(result: result)
             default:
                 result(FlutterMethodNotImplemented)
             }
         })
+    }
+}
+
+extension String {
+    func convertToDictionary() -> [String: Any]? {
+        if let data = self.data(using: .utf8) {
+            do {
+                return try JSONSerialization.jsonObject(with: data, options: []) as? [String: Any]
+            } catch {
+                print(error.localizedDescription)
+            }
+        }
+        return nil
     }
 }

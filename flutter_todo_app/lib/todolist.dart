@@ -1,13 +1,16 @@
 import 'dart:convert';
+import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:flutter/services.dart';
-import 'main.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert' as convert;
 
 class Todo {
-  Todo({required this.name, required this.checked});
+  Todo({required this.name, required this.id, required this.checked});
   final String name;
+  final String id;
   bool checked;
 }
 
@@ -77,7 +80,9 @@ class _TodoListState extends State<TodoList> {
       header = userInfoMap["name"];
       subtitle = userInfoMap["email"];
       Navigator.pop(context);
-      setState(() {});
+      setState(() {
+        _getTodos();
+      });
     } on PlatformException catch (e) {
       response = "SDK Start Failed: '${e.message}'.";
       Navigator.pop(context);
@@ -88,6 +93,53 @@ class _TodoListState extends State<TodoList> {
   Future<void> _logout() async {
     final String result = await platform.invokeMethod('logout');
     _navigateToNextScreen(context);
+  }
+
+  //Network Calls
+  Future<void> _deleteTodo(Todo todo) async {
+    try {
+      String _id = todo.id;
+      final String result = await platform.invokeMethod('callEndpoint', ["https://fr-todos-api.crbrl.io/todos/$_id",'DELETE', '']);
+      _getTodos();
+    } on PlatformException catch (e) {
+      debugPrint('SDK: $e');
+    }
+  }
+
+  Future<void> _updateTodo(Todo todo, bool checked) async {
+    try {
+      String _id = todo.id.toString();
+      final String result = await platform.invokeMethod('callEndpoint', ["https://fr-todos-api.crbrl.io/todos/$_id",'POST', '{\"completed\": $checked}']);
+      _getTodos();
+    } on PlatformException catch (e) {
+      debugPrint('SDK: $e');
+    }
+  }
+
+  Future<void> _getTodos() async {
+    try {
+      final String result = await platform.invokeMethod('callEndpoint', ["https://fr-todos-api.crbrl.io/todos",'GET', '']);
+      List<dynamic> toDosList = jsonDecode(result);
+      List<Map<String, dynamic>> todos = List<Map<String, dynamic>>.from(toDosList);
+      _todos.clear();
+      todos.forEach((Map<String, dynamic> todoMap) {
+        _todos.add(Todo(name: todoMap["title"], checked: todoMap["completed"], id: todoMap["_id"]));
+        setState(() { });
+      });
+      debugPrint('SDK: $todos');
+    } on PlatformException catch (e) {
+      debugPrint('SDK: $e');
+    }
+  }
+
+  Future<void> _addTodoItem(String name) async {
+    try {
+      final String result = await platform.invokeMethod('callEndpoint', ["https://fr-todos-api.crbrl.io/todos",'POST', '{\"title\": \"$name\"}']);
+      _getTodos();
+    } on PlatformException catch (e) {
+      debugPrint('SDK: $e');
+    }
+    _textFieldController.clear();
   }
 
   //Helper funtions
@@ -119,6 +171,13 @@ class _TodoListState extends State<TodoList> {
         return alert;
       },
     );
+  }
+
+  void _handleTodoChange(Todo todo) {
+    setState(() {
+      todo.checked = !todo.checked;
+      _updateTodo(todo, todo.checked);
+    });
   }
 
   //Widgets
@@ -236,9 +295,20 @@ class _TodoListState extends State<TodoList> {
       shrinkWrap: true,
       padding: EdgeInsets.symmetric(vertical: 8.0),
       children: _todos.map((Todo todo) {
-        return TodoItem(
-          todo: todo,
-          onTodoChanged: _handleTodoChange,
+        // return TodoItem(
+        //   todo: todo,
+        //   onTodoChanged: _handleTodoChange,
+        // );
+        return Dismissible(
+            key: Key(todo.id),
+            onDismissed: (direction) {
+              _deleteTodo(todo);
+            },
+            background: Container(color: Colors.red),
+            child: TodoItem(
+              todo: todo,
+              onTodoChanged: _handleTodoChange,
+            )
         );
       }).toList(),
     );
@@ -293,18 +363,5 @@ class _TodoListState extends State<TodoList> {
         );
       },
     );
-  }
-
-  void _addTodoItem(String name) {
-    setState(() {
-      _todos.add(Todo(name: name, checked: false));
-    });
-    _textFieldController.clear();
-  }
-
-  void _handleTodoChange(Todo todo) {
-    setState(() {
-      todo.checked = !todo.checked;
-    });
   }
 }

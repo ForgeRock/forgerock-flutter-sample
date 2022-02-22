@@ -174,7 +174,6 @@ public class ForgerockFlutterSampleBridge {
     
     @objc func callEndpoint(_ endpoint: String, method: String, payload: String, completion: @escaping FlutterResult) {
         // Invoke API
-        
         FRUser.currentUser?.getAccessToken { (user, error) in
             
             //  AM 6.5.2 - 7.0.0

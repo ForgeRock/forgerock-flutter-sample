@@ -8,7 +8,7 @@ import Flutter
         didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?
     ) -> Bool {
         
-        let frSampleBridge = ForgerockFlutterSampleBridge()
+        let frSampleBridge = FRAuthSampleBridge()
         frSampleBridge.setUpChannels(window)
         
         GeneratedPluginRegistrant.register(with: self)

@@ -1,5 +1,5 @@
 package com.example.flutter_todo_app;/*
- * Copyright (c) 2021 ForgeRock. All rights reserved.
+ * Copyright (c) 2022 ForgeRock. All rights reserved.
  *
  * This software may be modified and distributed under the terms
  * of the MIT license. See the LICENSE file for details.
@@ -73,7 +73,6 @@ public class FRAuthSampleBridge {
     public void start(MethodChannel.Result promise) {
         Logger.set(Logger.Level.DEBUG);
         FRAuth.start(this.context);
-        Config
         promise.success("SDK Initialized");
         // Clear the session - for debug reasons
         FRUser user = FRUser.getCurrentUser();
@@ -91,17 +90,17 @@ public class FRAuthSampleBridge {
     }
 
     public void login(MethodChannel.Result promise) {
-        try{
+        try {
             authenticate(promise, true);
-        }catch (Exception e){
+        } catch (Exception e) {
             promise.error("error", e.toString(), e);
         }
     }
 
     public void register(MethodChannel.Result promise) {
-        try{
+        try {
             authenticate(promise, false);
-        }catch (Exception e){
+        } catch (Exception e) {
             promise.error("error", e.toString(), e);
         }
     }
@@ -332,7 +331,7 @@ class FRNode {
         this.pageDescription = node.getDescription();
         this.frCallbacks = new ArrayList<FRCallback>();
         this.callbacks = new ArrayList<JsonObject>();
-        for (org.forgerock.android.auth.callback.Callback callback: node.getCallbacks()) {
+        for (Callback callback: node.getCallbacks()) {
             this.frCallbacks.add(new FRCallback(callback));
             JsonObject convertedObject = new Gson().fromJson(callback.getContent(), JsonObject.class);
             this.callbacks.add(convertedObject);
@@ -403,7 +402,7 @@ class FRCallback {
     /// Raw JSON response of Callback
     private String response;
 
-    public FRCallback(org.forgerock.android.auth.callback.Callback callback) {
+    public FRCallback(Callback callback) {
         this.type = callback.getType();
         this.inputNames = new ArrayList<String>();
 

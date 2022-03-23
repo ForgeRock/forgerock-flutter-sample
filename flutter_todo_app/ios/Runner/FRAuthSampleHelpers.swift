@@ -28,7 +28,10 @@ extension Array {
   /// - Returns: JSON string
   func toJson() throws -> String {
       let data = try JSONSerialization.data(withJSONObject: self, options: [])
-      return String(data: data, encoding: .utf8)!
+      if let string = String(data: data, encoding: .utf8) {
+          return string
+      }
+      throw NSError(domain: "Array", code: 1, userInfo: ["message": "Data cannot be converted to .utf8 string"])
   }
 }
 

@@ -62,8 +62,8 @@ public struct FRCallback: Encodable {
   var choices: [String]?
   var predefinedQuestions: [String]?
   var inputNames: [String]?
-  var policies: RawPolicies?
-  var failedPolicies: [RawFailedPolicies]?
+  var policies: RawPolicy?
+  var failedPolicies: [RawFailedPolicy]?
   
   /// Raw JSON response of Callback
   var response: String
@@ -91,7 +91,7 @@ public struct FRCallback: Encodable {
       if let policyDictionary = thisCallback.policies, let policiesJSON = try? policyDictionary.toJson() {
         let jsonData = Data(policiesJSON.utf8)
         do {
-          self.policies = try JSONDecoder().decode(RawPolicies.self, from: jsonData)
+          self.policies = try JSONDecoder().decode(RawPolicy.self, from: jsonData)
         }
         catch {
           print(error)
@@ -117,7 +117,7 @@ public struct FRCallback: Encodable {
             }
             paramsDictionary = newDictionary
           }
-          self.failedPolicies?.append(RawFailedPolicies(propertyName: self.prompt, params: paramsDictionary, policyRequirement:  failedPolicy.policyRequirement, failedDescription: failedPolicy.failedDescription()))
+          self.failedPolicies?.append(RawFailedPolicy(propertyName: self.prompt, params: paramsDictionary, policyRequirement:  failedPolicy.policyRequirement, failedDescription: failedPolicy.failedDescription()))
         }
       }
     }
@@ -142,13 +142,13 @@ public struct RawCallback: Codable {
   var _id: Int?
 }
 
-public struct RawPolicies: Codable {
+public struct RawPolicy: Codable {
   var name: String?
   var policyRequirements: [String]?
   var policies: [Policy]?
 }
 
-public struct RawFailedPolicies: Codable {
+public struct RawFailedPolicy: Codable {
   var propertyName: String?
   var params: [String: FlexibleType]?
   var policyRequirement: String?
@@ -166,7 +166,7 @@ public struct RawInput: Codable {
   var value: FlexibleType?
 }
 
-public enum ResponseType {
+public enum responseType {
   case String
   case Int
   case Double
@@ -177,9 +177,9 @@ public enum ResponseType {
 
 public struct FlexibleType: Codable {
   let value: Any
-  let originalType: ResponseType
+  let originalType: responseType
   
-  init(_ value: String, originalType: ResponseType = .NotSet) {
+  init(_ value: String, originalType: responseType = .NotSet) {
     self.value = value
     self.originalType = originalType
   }

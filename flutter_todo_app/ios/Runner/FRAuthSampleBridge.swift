@@ -16,7 +16,7 @@ public class FRAuthSampleBridge {
     
     @objc func frAuthStart(result: @escaping FlutterResult) {
       // Set log level according to your needs
-      FRLog.setLogLevel([.all])
+      FRLog.setLogLevel([.info])
       
       do {
         try FRAuth.start()
@@ -81,9 +81,10 @@ public class FRAuthSampleBridge {
               completion(FlutterError(code: "Error",
                                       message: error.localizedDescription,
                                   details: nil))
+              return
           }
           
-          let callbacksArray = responseObject!.callbacks ?? []
+          let callbacksArray = responseObject?.callbacks ?? []
           // If the array is empty there are no user inputs. This can happen in callbacks like the DeviceProfileCallback, that do not require user interaction.
           // Other callbacks like SingleValueCallback, will return the user inputs in an array of dictionaries [[String:String]] with the keys: identifier and text
           if callbacksArray.count == 0 {
@@ -102,7 +103,7 @@ public class FRAuthSampleBridge {
                 for (innerIndex, rawCallback) in callbacksArray.enumerated() {
                   if let inputsArray = rawCallback.input, outerIndex == innerIndex {
                     for input in inputsArray {
-                      if let value = input.value!.value as? String {
+                      if let value = input.value?.value as? String {
                         if input.name.contains("question") {
                           thisCallback.setQuestion(value)
                         } else {
@@ -118,13 +119,13 @@ public class FRAuthSampleBridge {
                   if let inputsArray = rawCallback.input, outerIndex == innerIndex, let value = inputsArray.first?.value {
                     switch value.originalType {
                     case .String:
-                      thisCallback.setValue(value.value as! String)
+                      thisCallback.setValue(value.value as? String)
                     case .Int:
-                      thisCallback.setValue(value.value as! Int)
+                      thisCallback.setValue(value.value as? Int)
                     case .Double:
-                      thisCallback.setValue(value.value as! Double)
+                      thisCallback.setValue(value.value as? Double)
                     case .Bool:
-                      thisCallback.setValue(value.value as! Bool)
+                      thisCallback.setValue(value.value as? Bool)
                     default:
                       break
                     }
@@ -152,8 +153,10 @@ public class FRAuthSampleBridge {
               encoder.outputFormatting = .prettyPrinted
                 do {
                     if let user = user, let token = user.token, let data = try? encoder.encode(token), let jsonAccessToken = String(data: data, encoding: .utf8) {
+                        FRLog.i("LoginSuccess - sessionToken: \(jsonAccessToken)")
                         completion(try ["type": "LoginSuccess", "sessionToken": jsonAccessToken].toJson())
                     } else {
+                        FRLog.i("LoginSuccess")
                         completion(try ["type": "LoginSuccess", "sessionToken": ""].toJson())
                     }
                 }
@@ -191,7 +194,7 @@ public class FRAuthSampleBridge {
             self.session.dataTask(with: request.build()!) { (data, response, error) in
                 guard let responseData = data, let httpResponse = response as? HTTPURLResponse, error == nil else {
                     completion(FlutterError(code: "API Error",
-                                            message: error!.localizedDescription,
+                                            message: error?.localizedDescription,
                                             details: nil))
                     return
                 }
@@ -229,7 +232,10 @@ public class FRAuthSampleBridge {
 
 extension FRAuthSampleBridge {
     func setUpChannels(_ window: UIWindow?) {
-        let controller : FlutterViewController = window?.rootViewController as! FlutterViewController
+        guard let controller = window?.rootViewController as? FlutterViewController else {
+            print("Could not resolve FlutterViewController from window?.rootViewController")
+            return
+        }
         let bridgeChannel = FlutterMethodChannel(name: "forgerock.com/SampleBridge",
                                                  binaryMessenger: controller.binaryMessenger)
         

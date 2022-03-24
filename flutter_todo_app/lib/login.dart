@@ -54,6 +54,7 @@ class _LoginPageState extends State<LoginPage> {
       //Upon completion, a node with callbacks will be returned, handle that node and present the callbacks to UI as needed.
       _handleNode(frNode);
     } on PlatformException catch (e) {
+      debugPrint('SDK Error: $e');
       Navigator.pop(context);
     }
   }

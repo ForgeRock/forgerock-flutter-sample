@@ -104,15 +104,15 @@ public struct FRCallback: Encodable {
           if let params = failedPolicy.params {
             let newDictionary = params.mapValues { value -> FlexibleType in
               if let str = value as? String {
-                return FlexibleType(str, originalType: .String)
+                return FlexibleType(str, originalType: .string)
               } else if let str = value as? Int {
-                return FlexibleType(String(str), originalType: .Int)
+                return FlexibleType(String(str), originalType: .int)
               } else if let str = value as? Double {
-                return FlexibleType(String(str), originalType: .Double)
+                return FlexibleType(String(str), originalType: .double)
               } else if let str = value as? Bool {
-                return FlexibleType(String(str), originalType: .Bool)
+                return FlexibleType(String(str), originalType: .bool)
               } else {
-                return FlexibleType("", originalType: .String)
+                return FlexibleType("", originalType: .string)
               }
             }
             paramsDictionary = newDictionary
@@ -166,20 +166,20 @@ public struct RawInput: Codable {
   var value: FlexibleType?
 }
 
-public enum responseType {
-  case String
-  case Int
-  case Double
-  case Bool
-  case TypeMismatch
-  case NotSet
+public enum ResponseType {
+  case string
+  case int
+  case double
+  case bool
+  case typeMismatch
+  case notSet
 }
 
 public struct FlexibleType: Codable {
   let value: Any
-  let originalType: responseType
+  let originalType: ResponseType
   
-  init(_ value: String, originalType: responseType = .NotSet) {
+  init(_ value: String, originalType: ResponseType = .notSet) {
     self.value = value
     self.originalType = originalType
   }
@@ -189,18 +189,18 @@ public struct FlexibleType: Codable {
     // attempt to decode from all JSON primitives
     if let str = try? container.decode(String.self) {
       value = str
-      originalType = .String
+      originalType = .string
     } else if let int = try? container.decode(Int.self) {
       value = int
-      originalType = .Int
+      originalType = .int
     } else if let double = try? container.decode(Double.self) {
       value = double
-      originalType = .Double
+      originalType = .double
     } else if let bool = try? container.decode(Bool.self) {
       value = bool
-      originalType = .Bool
+      originalType = .bool
     } else {
-      originalType = .String
+      originalType = .string
       value = ""
     }
   }
@@ -208,15 +208,15 @@ public struct FlexibleType: Codable {
   public func encode(to encoder: Encoder) throws {
     var container = encoder.singleValueContainer()
     switch originalType {
-    case .String:
+    case .string:
       try container.encode(value as! String)
-    case .Int:
+    case .int:
       let unwarpedValue = value as? Int ?? Int(value as! String)
       try container.encode(unwarpedValue)
-    case .Double:
+    case .double:
       let unwarpedValue = value as? Double ?? Double(value as! String)
       try container.encode(unwarpedValue)
-    case .Bool:
+    case .bool:
       let unwarpedValue = value as? Bool ?? Bool(value as! String)
       try container.encode(unwarpedValue)
     default:

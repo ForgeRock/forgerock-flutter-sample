@@ -15,37 +15,15 @@ public class FRAuthSampleBridge {
     private let session = URLSession(configuration: .default)
     
     @objc func frAuthStart(result: @escaping FlutterResult) {
-      // Set log level according to your needs
-      FRLog.setLogLevel([.info])
-      
-      do {
-        try FRAuth.start()
-          result("SDK Initialised")
-          FRUser.currentUser?.logout()
-      }
-      catch {
-        FRLog.e(error.localizedDescription)
-          result(FlutterError(code: "SDK Init Failed",
-                              message: error.localizedDescription,
-                              details: nil))
-      }
+      //Add SDK Start code here
     }
     
     @objc func login(result: @escaping FlutterResult) {
-        FRUser.login { (user, node, error) in
-            self.handleNode(user, node, error, completion: result)
-        }
-    }
-    
-    @objc func register(result: @escaping FlutterResult) {
-        FRUser.register { (user, node, error) in
-            self.handleNode(user, node, error, completion: result)
-        }
+        //Add SDK Login code here
     }
     
     @objc func frLogout(result: @escaping FlutterResult) {
-        FRUser.currentUser?.logout()
-        result("User logged out")
+        //Add SDK Logout code here
     }
     
     @objc func getUserInfo(result: @escaping FlutterResult) {
@@ -70,109 +48,7 @@ public class FRAuthSampleBridge {
     }
     
     @objc func next(_ response: String, completion: @escaping FlutterResult) {
-        let decoder = JSONDecoder()
-        let jsonData = Data(response.utf8)
-        if let node = self.currentNode {
-          var responseObject: Response?
-          do {
-            responseObject = try decoder.decode(Response.self, from: jsonData)
-          } catch  {
-            print(String(describing: error))
-              completion(FlutterError(code: "Error",
-                                      message: error.localizedDescription,
-                                  details: nil))
-              return
-          }
-          
-          let callbacksArray = responseObject?.callbacks ?? []
-          // If the array is empty there are no user inputs. This can happen in callbacks like the DeviceProfileCallback, that do not require user interaction.
-          // Other callbacks like SingleValueCallback, will return the user inputs in an array of dictionaries [[String:String]] with the keys: identifier and text
-          if callbacksArray.count == 0 {
-            for nodeCallback in node.callbacks {
-              if let thisCallback = nodeCallback as? DeviceProfileCallback {
-                let semaphore = DispatchSemaphore(value: 1)
-                semaphore.wait()
-                thisCallback.execute { _ in
-                  semaphore.signal()
-                }
-              }
-            }
-          } else {
-            for (outerIndex, nodeCallback) in node.callbacks.enumerated() {
-              if let thisCallback = nodeCallback as? KbaCreateCallback {
-                for (innerIndex, rawCallback) in callbacksArray.enumerated() {
-                  if let inputsArray = rawCallback.input, outerIndex == innerIndex {
-                    for input in inputsArray {
-                      if let value = input.value?.value as? String {
-                        if input.name.contains("question") {
-                          thisCallback.setQuestion(value)
-                        } else {
-                          thisCallback.setAnswer(value)
-                        }
-                      }
-                    }
-                  }
-                }
-              }
-              if let thisCallback = nodeCallback as? SingleValueCallback {
-                for (innerIndex, rawCallback) in callbacksArray.enumerated() {
-                  if let inputsArray = rawCallback.input, outerIndex == innerIndex, let value = inputsArray.first?.value {
-                    switch value.originalType {
-                    case .string:
-                      thisCallback.setValue(value.value as? String)
-                    case .int:
-                      thisCallback.setValue(value.value as? Int)
-                    case .double:
-                      thisCallback.setValue(value.value as? Double)
-                    case .bool:
-                      thisCallback.setValue(value.value as? Bool)
-                    default:
-                      break
-                    }
-                  }
-                }
-              }
-            }
-          }
-          
-          //Call node.next
-          node.next(completion: { (user: FRUser?, node, error) in
-            if let node = node {
-              //Handle node and return
-              self.handleNode(user, node, error, completion: completion)
-            } else {
-              if let error = error {
-                //Send the error back in the rejecter - nextStep.type === 'LoginFailure'
-                  completion(FlutterError(code: "LoginFailure",
-                                          message: error.localizedDescription,
-                                      details: nil))
-                return
-              }
-              //Transform the response for the nextStep.type === 'LoginSuccess'
-              let encoder = JSONEncoder()
-              encoder.outputFormatting = .prettyPrinted
-                do {
-                    if let user = user, let token = user.token, let data = try? encoder.encode(token), let jsonAccessToken = String(data: data, encoding: .utf8) {
-                        FRLog.i("LoginSuccess - sessionToken: \(jsonAccessToken)")
-                        completion(try ["type": "LoginSuccess", "sessionToken": jsonAccessToken].toJson())
-                    } else {
-                        FRLog.i("LoginSuccess")
-                        completion(try ["type": "LoginSuccess", "sessionToken": ""].toJson())
-                    }
-                }
-                catch {
-                    completion(FlutterError(code: "Serializing Response failed",
-                                        message: error.localizedDescription,
-                                        details: nil))
-                }
-            }
-          })
-          
-        } else {
-            completion(FlutterError(code: "Error",
-                                message: "UnkownError",
-                                details: nil))
-        }
+        // Add "Next Step" logic here
     }
     
     @objc func callEndpoint(_ endpoint: String, method: String, payload: String, completion: @escaping FlutterResult) {
@@ -248,7 +124,8 @@ extension FRAuthSampleBridge {
             case "login":
                 self.login(result: result)
             case "register":
-                self.register(result: result)
+                //Call native Register function
+                break
             case "logout":
                 self.frLogout(result: result)
             case "next":

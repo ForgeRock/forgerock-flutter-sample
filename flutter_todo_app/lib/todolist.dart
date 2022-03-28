@@ -4,8 +4,6 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:flutter/services.dart';
-import 'package:http/http.dart' as http;
-import 'dart:convert' as convert;
 
 class Todo {
   Todo({required this.name, required this.id, required this.checked});
@@ -60,39 +58,17 @@ class _TodoListState extends State<TodoList> {
   String subtitle = "";
 
   //Lifecycle methods
-  @override
-  void initState() {
-    super.initState();
-    SchedulerBinding.instance?.addPostFrameCallback((_) => {
-      //Calling the userinfo endpoint is going to give use some user profile information to enrich our UI. Additionally, verifies that we have a valid access token.
-      _getUserInfo()
-    });
-  }
+
 
   // SDK Calls -  Note the promise type responses. Handle errors on the UI layer as required
   Future<void> _getUserInfo() async {
     showAlertDialog(context);
     String response;
-    try {
-      final String result = await platform.invokeMethod('getUserInfo');
-      Map<String, dynamic> userInfoMap = jsonDecode(result);
-      response = result;
-      header = userInfoMap["name"];
-      subtitle = userInfoMap["email"];
-      Navigator.pop(context);
-      setState(() {
-        _getTodos();
-      });
-    } on PlatformException catch (e) {
-      response = "SDK Start Failed: '${e.message}'.";
-      Navigator.pop(context);
-    }
-    debugPrint('SDK: $response');
+    // Add call and logic for getting the UserInfo, by using the native bridge code via the MethodChannels
   }
 
   Future<void> _logout() async {
-    final String result = await platform.invokeMethod('logout');
-    _navigateToNextScreen(context);
+    // Call logout, by using the native bridge code via the MethodChannels
   }
 
   //Network Calls
@@ -217,8 +193,7 @@ class _TodoListState extends State<TodoList> {
             TextButton(
               child: const Text('Yes'),
               onPressed: () {
-                Navigator.of(context).pop();
-                _logout();
+                // Pop and call logout
               },
             ),
             TextButton(

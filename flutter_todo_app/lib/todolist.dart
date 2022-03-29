@@ -58,17 +58,41 @@ class _TodoListState extends State<TodoList> {
   String subtitle = "";
 
   //Lifecycle methods
-
+  @override
+  void initState() {
+    super.initState();
+    SchedulerBinding.instance?.addPostFrameCallback((_) => {
+      //Calling the userinfo endpoint is going to give use some user profile information to enrich our UI. Additionally, verifies that we have a valid access token.
+      _getUserInfo()
+    });
+  }
 
   // SDK Calls -  Note the promise type responses. Handle errors on the UI layer as required
   Future<void> _getUserInfo() async {
     showAlertDialog(context);
     String response;
     // Add call and logic for getting the UserInfo, by using the native bridge code via the MethodChannels
+    try {
+      final String result = await platform.invokeMethod('getUserInfo');
+      Map<String, dynamic> userInfoMap = jsonDecode(result);
+      response = result;
+      header = userInfoMap["name"];
+      subtitle = userInfoMap["email"];
+      Navigator.pop(context);
+      setState(() {
+        _getTodos();
+      });
+    } on PlatformException catch (e) {
+      response = "SDK Start Failed: '${e.message}'.";
+      Navigator.pop(context);
+    }
+    debugPrint('SDK: $response');
   }
 
   Future<void> _logout() async {
     // Call logout, by using the native bridge code via the MethodChannels
+    final String result = await platform.invokeMethod('logout');
+    _navigateToNextScreen(context);
   }
 
   //Network Calls
@@ -172,8 +196,8 @@ class _TodoListState extends State<TodoList> {
       bottomNavigationBar: _bottomBar(),
       backgroundColor: Colors.grey[100],
       body: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [_welcomeText(), _listView()],
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [_welcomeText(), _listView()],
       ),
       floatingActionButton: FloatingActionButton(
           onPressed: () => _displayDialog(),
@@ -194,6 +218,8 @@ class _TodoListState extends State<TodoList> {
               child: const Text('Yes'),
               onPressed: () {
                 // Pop and call logout
+                Navigator.of(context).pop();
+                _logout();
               },
             ),
             TextButton(
@@ -210,58 +236,58 @@ class _TodoListState extends State<TodoList> {
 
   Widget _welcomeText() {
     return Container(
-      color: Colors.greenAccent[100],
-      width: MediaQuery.of(context).size.width,
-      margin: EdgeInsets.all(15.0),
-      child:
-      Padding(
-        padding: const EdgeInsets.all(15.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(Icons.gpp_good),
-                SizedBox(width: 2),
-                Expanded(
-                  flex: 4,
-                  child: Text(
-                    "Welcome back, $header",
-                    style: TextStyle(
-                        color: Colors.grey[900],
-                        fontWeight: FontWeight.bold,
-                        fontSize: 16),
-                    softWrap: true,
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                )
-              ],
-            ),
-            SizedBox(height: 5),
-            Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                SizedBox(width: 28),
-                Expanded(
-                  flex: 4,
+        color: Colors.greenAccent[100],
+        width: MediaQuery.of(context).size.width,
+        margin: EdgeInsets.all(15.0),
+        child:
+        Padding(
+          padding: const EdgeInsets.all(15.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(Icons.gpp_good),
+                  SizedBox(width: 2),
+                  Expanded(
+                    flex: 4,
                     child: Text(
-                      "You're currently logged in with the email $subtitle",
+                      "Welcome back, $header",
                       style: TextStyle(
                           color: Colors.grey[900],
-                          fontWeight: FontWeight.w200,
-                          fontSize: 14),
+                          fontWeight: FontWeight.bold,
+                          fontSize: 16),
                       softWrap: true,
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
-                    )
-                )
-              ],
-            ),
-          ],
-        ),
-      )
+                    ),
+                  )
+                ],
+              ),
+              SizedBox(height: 5),
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  SizedBox(width: 28),
+                  Expanded(
+                      flex: 4,
+                      child: Text(
+                        "You're currently logged in with the email $subtitle",
+                        style: TextStyle(
+                            color: Colors.grey[900],
+                            fontWeight: FontWeight.w200,
+                            fontSize: 14),
+                        softWrap: true,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                      )
+                  )
+                ],
+              ),
+            ],
+          ),
+        )
     );
   }
 

@@ -25,8 +25,8 @@
 	<key>forgerock_keychain_access_group</key>
 	<string>com.forgerock.flutterTodoApp</string>
 	<key>forgerock_auth_service_name</key>
-	<string></string>
+	<string>UsernamePassword</string>
 	<key>forgerock_registration_service_name</key>
-	<string></string>
+	<string>Registration</string>
 </dict>
 </plist>

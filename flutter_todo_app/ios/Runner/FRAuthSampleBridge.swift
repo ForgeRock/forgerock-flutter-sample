@@ -94,7 +94,7 @@ public class FRAuthSampleBridge {
                         if let inputsArray = rawCallback.input, outerIndex == innerIndex,
                            let value = inputsArray.first?.value {
                             
-                            thisCallback.setValue(value.value as! String)
+                            thisCallback.setValue(value.value)
                         }
                     }
                 }

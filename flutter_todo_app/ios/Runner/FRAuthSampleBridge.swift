@@ -16,7 +16,7 @@ public class FRAuthSampleBridge {
     
     @objc func frAuthStart(result: @escaping FlutterResult) {
       // Set log level according to your needs
-      FRLog.setLogLevel([.info])
+      FRLog.setLogLevel([.all])
       
       do {
         try FRAuth.start()
